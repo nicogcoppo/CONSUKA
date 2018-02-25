@@ -15,6 +15,12 @@ declare VAR
 
 declare -a INDISPENSABLE=()
 
+declare -r FONDO=${2}
+
+declare -r TITULO=${3}
+
+declare -r SUBT=${4}
+
 declare -r TABLA=$5
 
 ################# FUNCIONES ############################
@@ -161,11 +167,18 @@ function testeo_coma {
 
     PRUEBA_TESTEO=$1
     
-    if [ ${PRUEBA_TESTEO:0:1}=',' ]; then
+    if [ "${PRUEBA_TESTEO:0:1}" = "," ]; then
 
 	PRUEBA_TESTEO=$(echo $PRUEBA_TESTEO | sed 's/^.//')
+	
     fi
 
+     
+    if [ "${PRUEBA_TESTEO:0:1}" = "[:alnum:]" ]; then
+
+	PRUEBA_TESTEO=$(echo $PRUEBA_TESTEO | sed 's/^/"/')
+	
+    fi
 
 }
 
@@ -199,6 +212,8 @@ function pre_grabar { # PREPARA LOS INDICADORES Y LOS DATOS A GRABAR. JUNTA LOS 
     paste ${temp}"tmp_data_grabado.ed" ${temp}"tmp_data_grabado2.ed" | tr '\t' ',' >${temp}"data_grabado.ed"
     
 }
+
+
     
 function limpiado {
 
@@ -237,13 +252,13 @@ while true; do
   control_estados  
   exec 3>&1
   selection=$(dialog \
-    --backtitle "CARGA DE DATOS" \
-    --title ""${TABLA}"" \
+    --backtitle """${FONDO}""" \
+    --title """${TITULO}""" \
     --clear \
     --cancel-label "SALIR" \
     --help-button \
     --help-label "FINALIZAR" \
-    --menu "SELECCIONAR USANDO ENTER:" 0 0 0 "${foraneos[@]}" \
+    --menu """${SUBT}""" 0 0 0 "${foraneos[@]}" \
     2>&1 1>&3)
   exit_status=$?
   exec 3>&-
@@ -293,8 +308,13 @@ while true; do
 
       ;;
     *)
+	SELECCIONADO=$selection
 	
+	bash -o xtrace ${scr}"busqueda_tipo.sh" "${SELECCIONADO}"
 
+	VAR=$(cat ${temp}"busqueda")
+
+	ubicar "$SELECCIONADO"
 	
      ;;
   esac
