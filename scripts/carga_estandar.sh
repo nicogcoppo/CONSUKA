@@ -56,7 +56,7 @@ function control_estados {
 
 function ubicar { # $selection
     
-    CONTADOR=$(grep -nr "${1}" "./"${temp}"/tmp.ed" | tr ':' '\t' | awk '{print $1}')
+    CONTADOR=$(grep -nr "${1}" "./"${temp}"/tmp.ed" | head -1 |tr ':' '\t' | awk '{print $1}')
 
     
     cat ""${temp}"/selection.ed" | tail -n +2 | awk '{print $1}' >""${temp}"/a.ed"
@@ -137,11 +137,11 @@ function grabacion { # SE CONTROLA QUE ESTEN TODOS LOS DATOS COMPLETOS Y SE PROC
 
     DENOMINACION=$(cat ${temp}"denominaciones_grabado.ed")    
 
-    testeo_coma $DENOMINACION; DENOMINACION=$PRUEBA_TESTEO
+    testeo_coma """$DENOMINACION"""; DENOMINACION=$PRUEBA_TESTEO
     
     DATA=$(cat ${temp}"data_grabado.ed")
 
-    testeo_coma $DATA; DATA=$PRUEBA_TESTEO
+    testeo_coma """$DATA"""; DATA=$PRUEBA_TESTEO
    
     rm ${temp}"log_grabado.ed"
 
@@ -214,6 +214,49 @@ function pre_grabar { # PREPARA LOS INDICADORES Y LOS DATOS A GRABAR. JUNTA LOS 
 }
 
 
+function buscar_dia {
+    declare TITULO_=$1
+    exec 3>&1
+	DIA_ASIGNA=$(dialog \
+			--backtitle "CALENDARIO" \
+			--title """${TITULO_}""" \
+			--clear \
+			--cancel-label "SALIR" \
+			--help-button \
+			--help-label "FINALIZAR" \
+			--calendar "SELECCION UTILIZANDO ENTER" 0 0 0\
+			2>&1 1>&3)
+	exit_status=$?
+	exec 3>&-
+	case $exit_status in
+	    $DIALOG_CANCEL)
+		clear
+		
+		exit 192
+		;;
+	    $DIALOG_ESC)
+		clear
+		
+		exit 204
+		;;
+	esac
+	reconstruir_fecha "${DIA_ASIGNA}"
+}
+
+function reconstruir_fecha {
+    declare fecha=$1
+    declare -a data_fecha
+    CONTADOR=0
+    echo ${fecha} | tr '/' '\n' >${temp}"fecha.ed"
+    while read line;do
+	data_fecha[${CONTADOR}]="${line}"
+	let CONTADOR+=1
+    done<${temp}"fecha.ed"
+    DIA_ASIGNA=""${data_fecha[2]}"-"${data_fecha[1]}"-"${data_fecha[0]}""
+}
+
+
+
     
 function limpiado {
 
@@ -228,9 +271,22 @@ function limpiado {
 
 ## Se agrupan los campos de las tablas clientes por 1) CLAVES FORANEAS 2) VARCHAR
 
-mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${TABLA}";" | grep int | awk '{print $1}'| tail -n +2 > "./"${temp}"/tmp.ed"
+#mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${TABLA}";" | grep int | awk '{print $1}'| tail -n +2 > "./"${temp}"/tmp.ed"
 
-mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${TABLA}";" | grep -v int | awk '{print $1}' | tail -n +2  > "./"${temp}"/tmp2.ed"
+mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${TABLA}";" | grep int | grep -v ANO | awk '{print $1}'| tail -n +2 > "./"${temp}"/tmp.ed"
+
+
+
+mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${TABLA}";" | grep date | awk '{print $1}' >> "./"${temp}"/tmp.ed"
+
+#mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${TABLA}";" | grep -v int | awk '{print $1}' | tail -n +2  > "./"${temp}"/tmp2.ed"
+
+mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${TABLA}";" | grep -v int | grep -v date | awk '{print $1}' | tail -n +2  > "./"${temp}"/tmp2.ed"
+
+
+mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${TABLA}";" | grep ANO | awk '{print $1}' >> "./"${temp}"/tmp2.ed"
+
+
 
 echo "DATOS" >>"./"${temp}"/tmp.ed"
 
@@ -300,12 +356,24 @@ while true; do
     "DATOS" )
 	
 		
- 	bash ""${scr}"/radio_std.sh" "CARGA DE DATOS" ""${TABLA}"" "DATOS "${TABLA}"" "tmp2.ed" "tmp_radio.ed"
+ 	bash ""${scr}"/radio_std.sh" """${TITULO}""" """${SUBT}""" """${TABLA}""" "tmp2.ed" "tmp_radio.ed"
 
 	echo "tmp_radio.ed" > ""${temp}"archivo.ed"
 
 	control_indispensables "${INDISPENSABLE[@]}" 
 
+	;;
+
+    "FECHA" )
+	
+    	buscar_dia "${TABLA}"
+
+    	echo -e "${DIA_ASIGNA}\t${DIA_ASIGNA}" > ""${temp}"/selection.ed"
+
+	echo -e "${DIA_ASIGNA}\t${DIA_ASIGNA}" >> ""${temp}"/selection.ed"
+	
+    	ubicar "FECHA"
+	
       ;;
     *)
 	SELECCIONADO=$selection

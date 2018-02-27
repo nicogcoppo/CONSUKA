@@ -55,7 +55,7 @@ declare -rx UBICACIONES="UBICACIONES"
 
 declare -rx SCRIPTS="SCRIPTS"
 
-declare -rx DB=barba
+declare -rx DB=consuka1
 
 declare -rx DIA=$(date +%F)
 
@@ -107,6 +107,13 @@ function lectura_seleccion {
     
 }    
 	
+
+function limpieza_formularios {
+
+    rm ${temp}tmp2.ed ${temp}tmp_radio.ed
+
+}
+
 
 
 #@@@@@@@@@@@@@@@@@@ SCRIPT ##################################	
@@ -176,7 +183,7 @@ while true;do
     
     DIRECTIVA_a[$POSICION]="clasico.sh"
     DIRECTIVA_b[$POSICION]="PPAL"
-    DIRECTIVA_c[$POSICION]="CONSUKA 1.0"
+    DIRECTIVA_c[$POSICION]="CONSUKA v1.0                                                                                               Consultoria Aeronautica"
     DIRECTIVA_d[$POSICION]="MENU PRINCIPAL"
     DIRECTIVA_e[$POSICION]="SELECCION UNA OPCION"
     
@@ -190,7 +197,8 @@ while true;do
 	    0)lectura_seleccion ${temp}"tmp.m"
 	esac
 	
-
+	limpieza_formularios
+	
     done
 done
 
