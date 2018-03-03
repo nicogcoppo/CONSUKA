@@ -154,7 +154,7 @@ function grabacion { # SE CONTROLA QUE ESTEN TODOS LOS DATOS COMPLETOS Y SE PROC
         dialog --msgbox "${DATA}" 0 0
         return 2
     else
-	dialog --msgbox "Grabacion de Nuevo Cliente Exitosa" 0 0
+	dialog --msgbox "Grabacion de datos exitosa" 0 0
 	return 0
     fi
     
