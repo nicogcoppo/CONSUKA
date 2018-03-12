@@ -42,9 +42,7 @@ echo "autovectorPrioridad=R(:,j(2))/norm(R(:,j(2)))" >>${SCI_SCRIPT}
 
 echo "n=size(M,1)" >>${SCI_SCRIPT}
 
-#echo 'if n+0.1*(1.7699*n-4.3513) > Landa_prioridad then disp("Verifica consistencia"); else disp("NO VERIFICA"); end' >>${SCI_SCRIPT}
-
-echo "Relacion=criterioAlonso(n)/landaPrioridad" >>${SCI_SCRIPT}
+echo 'if criterioAlonso(n) > landaPrioridad then disp("Verifica consistencia"); else disp("NO VERIFICA"); end' >>${SCI_SCRIPT}
 
 
 #Se definen las matrices para cada uno de los elementos de interes
@@ -57,7 +55,7 @@ mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT CONCAT(TIPO,
 
 mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT CONCAT(TIPO,'(',TIPO,'==0)=1') FROM DATO_ESTUDIO JOIN (TIPO_DATO_ESTUDIO) ON (TIPO_DATO_ESTUDIO.tdID=DATO_ESTUDIO.TIPO_DATO_ESTUDIO) GROUP BY TIPO;" | tail -n +2 >>${SCI_SCRIPT}
 
-mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT '[R,data]=spec(',TIPO,');','[landa',TIPO,',j]=max(real(data));','autoVector',TIPO,'=R(:,j(2))/norm(R(:,j(2)));n=size(',TIPO,',1);relacion',TIPO,'=criterioAlonso(n)/landa',TIPO,';disp(relacion',TIPO,')' FROM DATO_ESTUDIO JOIN (TIPO_DATO_ESTUDIO) ON (TIPO_DATO_ESTUDIO.tdID=DATO_ESTUDIO.TIPO_DATO_ESTUDIO) GROUP BY TIPO;" | tail -n +2 | tr '\t' ' ' | sed 's/ //g' >>${SCI_SCRIPT}
+mysql -u "${user}" --password="${pass}" --execute="USE "${DB}";SELECT '[R,data]=spec(',TIPO,');','[landa',TIPO,',j]=max(real(data));','autoVector',TIPO,'=R(:,j(2))/norm(R(:,j(2)));n=size(',TIPO,',1);if!criterioAlonso(n)!>!landa',TIPO,'!then!disp(''Verifica!consistencia'');!else!disp(''NO!VERIFICA'');!end' FROM DATO_ESTUDIO JOIN (TIPO_DATO_ESTUDIO) ON (TIPO_DATO_ESTUDIO.tdID=DATO_ESTUDIO.TIPO_DATO_ESTUDIO) GROUP BY TIPO;" | tail -n +2 | tr '\t' ' ' | sed 's/ //g' | tr '!' ' '>>${SCI_SCRIPT}
 
 # Matriz Final prioridad
 
@@ -73,9 +71,7 @@ echo "autovectorPrioridadFinal=R(:,j(2))/norm(R(:,j(2)))" >>${SCI_SCRIPT}
 
 echo "n=size(matrizPrioridadFinal,1)" >>${SCI_SCRIPT}
 
-#echo 'if n+0.1*(1.7699*n-4.3513) > Landa_prioridad then disp("Verifica consistencia"); else disp("NO VERIFICA"); end' >>${SCI_SCRIPT}
-
-echo "RelacionPrioridadFinal=criterioAlonso(n)/landaPrioridadFinal" >>${SCI_SCRIPT}
+echo 'if criterioAlonso(n) > landaPrioridadFinal then disp("Verifica consistencia"); else disp("NO VERIFICA"); end' >>${SCI_SCRIPT}
 
 
 scilab -nwni <${SCI_SCRIPT}
