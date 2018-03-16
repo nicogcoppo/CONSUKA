@@ -55,7 +55,7 @@ declare -rx UBICACIONES="UBICACIONES"
 
 declare -rx SCRIPTS="SCRIPTS"
 
-declare -rx DB=consuka1
+declare -rx DB=CONSULTORIA_AERONAUTICA
 
 declare -rx DIA=$(date +%F)
 

@@ -84,6 +84,37 @@ function ubicar { # $selection
     
 }
 
+function ubicar_REGISTRO { # $selection
+    
+    CONTADOR=$(grep -nr "${1}" "./"${temp}"/tmp.ed" | head -1 |tr ':' '\t' | awk '{print $1}')
+
+    
+    cat ""${temp}"/selection.ed" | tail -n +2 | awk '{print $1 " " $2}' >""${temp}"/a.ed"
+
+    
+    cat ""${temp}"/selection.ed" | tail -n +2 | awk 'BEGIN{FS=OFS="\t"}{$1="";}1' >""${temp}"/b.ed"    
+
+    
+    VAR="$(cat ""${temp}"/a.ed")"
+    
+    awk 'NR=='"${CONTADOR}"'{print "'"${VAR}"'"}1' ""${temp}"/tmp_num.ed" > ""${temp}"/tmp3.ed"
+   
+    
+    mv ""${temp}"/tmp3.ed" ""${temp}"/tmp_num.ed" 
+
+    awk 'NR=='"${CONTADOR}"'{print "'"$(cat ""${temp}"/b.ed")"'"}1' ""${temp}"/tmp_num_v.ed" > ""${temp}"/tmp3.ed"
+
+
+    mv ""${temp}"/tmp3.ed" ""${temp}"/tmp_num_v.ed"
+
+    let CONTADOR+=1
+    
+    sed -i -e ''"${CONTADOR}"'d' ""${temp}"/tmp_num.ed" ""${temp}"/tmp_num_v.ed"
+
+    
+}
+
+
 # Controla que se haya ubicado informacion en el archivo de texto, en las lineas
 # especificadas en el array
 
@@ -374,7 +405,33 @@ while true; do
 	
     	ubicar "FECHA"
 	
+	;;
+
+    "REGISTRO" )
+	
+    	DIA_ASIGNA=""$(mysql -u "${user}" --password="${pass}" --execute="USE "${DB}";SELECT NOW();" | tail -n +2)""
+
+    	echo -e "${DIA_ASIGNA}\t${DIA_ASIGNA}" > ""${temp}"/selection.ed"
+
+	echo -e "${DIA_ASIGNA}\t${DIA_ASIGNA}" >> ""${temp}"/selection.ed"
+	
+    	ubicar_REGISTRO "REGISTRO"
+	
+	;;
+    
+    
+    "RELATIVO" )
+	
+	SELECCIONADO=$selection
+	
+	bash -o xtrace ${scr}"busqueda_tipo.sh" "TIPO_DATO_ESTUDIO"
+
+	VAR=$(cat ${temp}"busqueda")
+
+	ubicar "$SELECCIONADO"
+
       ;;
+
     *)
 	SELECCIONADO=$selection
 	
