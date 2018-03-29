@@ -84,9 +84,9 @@ echo 'function j=criterioAlonso(x);j=x+0.1*(1.7699*x-4.3513);endfunction' >${SCI
 
 echo "M=([])" >>${SCI_SCRIPT}
 
-mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT CONCAT('M(',t1.TIPO_DATO_ESTUDIO,',',t1.RELATIVO,')=',t1.MAGNITUD) FROM RELEVANCIA_DATOS t1 LEFT JOIN RELEVANCIA_DATOS t2 ON (t1.TIPO_DATO_ESTUDIO = t2.TIPO_DATO_ESTUDIO AND t1.REGISTRO < t2.REGISTRO) WHERE t2.REGISTRO IS NULL;" | tail -n +2 >>${SCI_SCRIPT} # Sacas la variacion entre dos columnas con la fecha mas reciente
+mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT CONCAT('M(',t1.TIPO_DATO_ESTUDIO,',',t1.RELATIVO,')=',t1.MAGNITUD) FROM RELEVANCIA_DATOS t1 LEFT JOIN RELEVANCIA_DATOS t2 ON (t1.TIPO_DATO_ESTUDIO = t2.TIPO_DATO_ESTUDIO AND t1.RELATIVO = t2.RELATIVO AND t1.REGISTRO < t2.REGISTRO) WHERE t2.REGISTRO IS NULL;" | tail -n +2 >>${SCI_SCRIPT} # Sacas la variacion entre dos columnas con la fecha mas reciente
 
-mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT CONCAT('M(',t1.RELATIVO,',',t1.TIPO_DATO_ESTUDIO,')=',1 / t1.MAGNITUD) FROM RELEVANCIA_DATOS t1 LEFT JOIN RELEVANCIA_DATOS t2 ON (t1.TIPO_DATO_ESTUDIO = t2.TIPO_DATO_ESTUDIO AND t1.REGISTRO < t2.REGISTRO) WHERE t2.REGISTRO IS NULL;" | tail -n +2  >>${SCI_SCRIPT} # Sacas la variacion entre dos columnas con la fecha mas reciente
+mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT CONCAT('M(',t1.RELATIVO,',',t1.TIPO_DATO_ESTUDIO,')=',1 / t1.MAGNITUD) FROM RELEVANCIA_DATOS t1 LEFT JOIN RELEVANCIA_DATOS t2 ON (t1.TIPO_DATO_ESTUDIO = t2.TIPO_DATO_ESTUDIO AND t1.RELATIVO = t2.RELATIVO AND t1.REGISTRO < t2.REGISTRO) WHERE t2.REGISTRO IS NULL;" | tail -n +2  >>${SCI_SCRIPT} # Sacas la variacion entre dos columnas con la fecha mas reciente
 
 echo "M(M==0)=1" >>${SCI_SCRIPT}
 
@@ -96,11 +96,11 @@ echo "[R,data]=spec(M)" >>${SCI_SCRIPT}
 
 echo "[landaPrioridad,j]=max(real(data))" >>${SCI_SCRIPT}
 
-echo "autoVectorPrioridad=R(:,j(2))/norm(R(:,j(2)))" >>${SCI_SCRIPT}
+echo "autoVectorPrioridad=abs(R(:,j(2))/norm(R(:,j(2))))/2" >>${SCI_SCRIPT}
 
 echo "n=size(M,1)" >>${SCI_SCRIPT}
 
-echo 'if criterioAlonso(n) > landaPrioridad then disp("Verifica consistencia"); else disp("NO VERIFICA"); end' >>${SCI_SCRIPT}
+echo 'if criterioAlonso(n) > landaPrioridad then disp("Verifica consistencia"); else disp("La Matriz Prioridades NO VERIFICA consistencia"); end' >>${SCI_SCRIPT}
 
 
 #Se definen las matrices para cada uno de los elementos de interes
@@ -113,11 +113,11 @@ mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT CONCAT(TIPO,
 
 mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT CONCAT(TIPO,'(',TIPO,'==0)=1') FROM DATO_ESTUDIO JOIN (TIPO_DATO_ESTUDIO) ON (TIPO_DATO_ESTUDIO.tdID=DATO_ESTUDIO.TIPO_DATO_ESTUDIO) GROUP BY TIPO;" | tail -n +2 >>${SCI_SCRIPT}
 
-mysql -u "${user}" --password="${pass}" --execute="USE "${DB}";SELECT '[R,data]=spec(',TIPO,');','[landa',TIPO,',j]=max(real(data));','autoVector',TIPO,'=R(:,j(2))/norm(R(:,j(2)));n=size(',TIPO,',1);if!criterioAlonso(n)!>!landa',TIPO,'!then!disp(''Verifica!consistencia'');!else!disp(''NO!VERIFICA'');!end' FROM DATO_ESTUDIO JOIN (TIPO_DATO_ESTUDIO) ON (TIPO_DATO_ESTUDIO.tdID=DATO_ESTUDIO.TIPO_DATO_ESTUDIO) GROUP BY TIPO;" | tail -n +2 | tr '\t' ' ' | sed 's/ //g' | tr '!' ' '>>${SCI_SCRIPT}
+mysql -u "${user}" --password="${pass}" --execute="USE "${DB}";SELECT '[R,data]=spec(',TIPO,');','[landa',TIPO,',j]=max(real(data));','autoVector',TIPO,'=abs(R(:,j(2))/norm(R(:,j(2))))/2;n=size(',TIPO,',1);if!criterioAlonso(n)!>!landa',TIPO,'!then!disp(''Verifica!consistencia'');!else!disp(&',TIPO,'&);disp(''NO!VERIFICA'');!end' FROM DATO_ESTUDIO JOIN (TIPO_DATO_ESTUDIO) ON (TIPO_DATO_ESTUDIO.tdID=DATO_ESTUDIO.TIPO_DATO_ESTUDIO) GROUP BY TIPO;" | tail -n +2 | tr '\t' ' ' | sed 's/ //g' | sed "s/&/'/g" | tr '!' ' '>>${SCI_SCRIPT}
 
 # Matriz Final prioridad
 
-mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT 'autoVector',TIPO FROM DATO_ESTUDIO JOIN (TIPO_DATO_ESTUDIO) ON (TIPO_DATO_ESTUDIO.tdID=DATO_ESTUDIO.TIPO_DATO_ESTUDIO) GROUP BY TIPO ORDER BY TIPO_DATO_ESTUDIO;" | tail -n +2 | tr '\n' ',' | sed 's/.$//' | tr '\t' ' ' | sed 's/ //g' | sed 's/^/matrizPrioridadFinal=-1*[/'| sed 's/$/];/' >>${SCI_SCRIPT}
+mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT 'autoVector',TIPO FROM DATO_ESTUDIO JOIN (TIPO_DATO_ESTUDIO) ON (TIPO_DATO_ESTUDIO.tdID=DATO_ESTUDIO.TIPO_DATO_ESTUDIO) GROUP BY TIPO ORDER BY TIPO_DATO_ESTUDIO;" | tail -n +2 | tr '\n' ',' | sed 's/.$//' | tr '\t' ' ' | sed 's/ //g' | sed 's/^/matrizPrioridadFinal=[/'| sed 's/$/];/' >>${SCI_SCRIPT}
 
 ## Saco la ponderacion final
 
@@ -129,15 +129,17 @@ echo "escritura=fullfile('"${PWD}/${temp}"','"${SCI_SALIDA}"')" >>${SCI_SCRIPT}
 
 echo "csvWrite(vectorResultados,escritura)" >>${SCI_SCRIPT}
 
-scilab -nwni <${SCI_SCRIPT}
+scilab -nwni <${SCI_SCRIPT} >${temp}regsScilab.sci && (test ! -z $(cat ${temp}regsScilab.sci | grep "NO VERIFICA" | head -c 2) && dialog --msgbox "Existe una incosistencia en una o mas matrices" 0 0)
 
 mysql -u "${user}" --password="${pass}" --execute="USE ${DB};CREATE TABLE SALIDA_AHP (ahpID INT NOT NULL, MODELO INT NOT NULL, MAGNITUD DOUBLE);SELECT MODELO FROM DATO_ESTUDIO GROUP BY MODELO ORDER BY MODELO;" | tail -n +2 >${temp}/resultado.ahp 
 
-paste -d ',' ${temp}/resultado.ahp ${temp}/resultado.ahp ${temp}${SCI_SALIDA} | sed 's/^/INSERT INTO SALIDA_AHP VALUES(/' | sed 's/$/);/' >${temp}/resultado.sql   
+grep -v '^0$' ${temp}${SCI_SALIDA} >${temp}resultado_scilab.sci
+
+paste -d ',' ${temp}/resultado.ahp ${temp}/resultado.ahp ${temp}resultado_scilab.sci | sed 's/^/INSERT INTO SALIDA_AHP VALUES(/' | sed 's/$/);/' >${temp}/resultado.sql   
 
 mysql -u "${user}" --password="${pass}" -D${DB} <${temp}/resultado.sql   
 
-mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT MODELO.MODELO, MAGNITUD FROM SALIDA_AHP JOIN(MODELO) ON(SALIDA_AHP.MODELO=MODELO.moID) ORDER BY MAGNITUD DESC;"  | column -t -s $'\t' >${temp}"tmp2.ed"
+mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT MODELO.MODELO, CONCAT(ROUND((MAGNITUD / 2 ) * 100,2),' %') AS 'CONVENIENCIA' FROM SALIDA_AHP JOIN(MODELO) ON(SALIDA_AHP.MODELO=MODELO.moID) ORDER BY MAGNITUD DESC;"  | column -t -s $'\t' >${temp}"tmp2.ed"
 
 mysql -u "${user}" --password="${pass}" --execute="USE ${DB};DROP TABLE SALIDA_AHP;"
 
