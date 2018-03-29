@@ -127,21 +127,26 @@ while true;do
 	esac
 
 
-
+	
 
 	VAR_A=$(mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${ACTOR}";" | grep -E ''"""${selection}"""'.*int')
 
 	if test ! -z """${VAR_A}""";then
 
-	    INDICE_F=$(mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${selection}";" | grep -E 'varchar.*(([0-9]{2})|[0-9]{3})' | awk '{print $1}')
+	    
+	    INDICE_F=$(mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${selection}";" | grep -E 'varchar.*(([0-9]{2})|[0-9]{3})' | awk '{print $1}' | head -1)
 
-	    VAR_select=""${COLUMNA_REFERENCIA}","${INDICE_F}""
+	    #VAR_select=""${COLUMNA_REFERENCIA}","${INDICE_F}""
 
-	    VAR_join=""${DB}"."${selection}
+	    VAR_select=""${INDICE}","${INDICE_F}""
 
-	    VAR_on=""${DB}"."${ACTOR}"."${selection}"="${DB}"."${selection}"."$(mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${selection}";" | awk '{print $1}'| head -2 | tail -n +2)
+	    #VAR_join=""${DB}"."${selection}
 
-	    VAR_A="SELECT "${VAR_select}" FROM "${DB}"."${ACTOR}" JOIN (""${VAR_join}"") ON (""${VAR_on}"") WHERE "${INDICE_F}" LIKE '%""${VALOR}""%';"
+	    #VAR_on=""${DB}"."${ACTOR}"."${selection}"="${DB}"."${selection}"."$(mysql -u "${user}" --password="${pass}" --execute="DESCRIBE "${DB}"."${selection}";" | awk '{print $1}'| head -2 | tail -n +2)
+
+	    #VAR_A="SELECT "${VAR_select}" FROM "${DB}"."${ACTOR}" JOIN (""${VAR_join}"") ON (""${VAR_on}"") WHERE "${INDICE_F}" LIKE '%""${VALOR}""%';"
+
+	    VAR_A="SELECT "${VAR_select}" FROM "${DB}"."${ACTOR}"  WHERE "${INDICE_F}" LIKE '%""${VALOR}""%';"
     
 	    mysql -u "${user}" --password="${pass}" --execute="${VAR_A}" | tail -n +2 > "./"${temp}"/tmp.bs"
 
