@@ -161,13 +161,13 @@ mysql -u "${user}" --password="${pass}" -D${DB} <${temp}/resultado.sql
 
 mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT MODELO.MODELO, CONCAT(ROUND(MAGNITUD * 100,2),' %') AS 'CONVENIENCIA' FROM SALIDA_AHP JOIN(MODELO) ON(SALIDA_AHP.MODELO=MODELO.moID) ORDER BY MAGNITUD DESC;"  | column -t -s $'\t' >${temp}"tmp2.ed"
 
-mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT MODELO.MODELO, CONCAT(ROUND(MAGNITUD * 100,2),' %') AS 'CONVENIENCIA' FROM SALIDA_AHP JOIN(MODELO) ON(SALIDA_AHP.MODELO=MODELO.moID) ORDER BY MAGNITUD DESC;"  | tr '\t' ';' >${temp}"visualResul"
+mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT MODELO.MODELO, CONCAT(ROUND(MAGNITUD * 100,2),' %') AS 'CONVENIENCIA' FROM SALIDA_AHP JOIN(MODELO) ON(SALIDA_AHP.MODELO=MODELO.moID) ORDER BY SALIDA_AHP.MODELO;"
 
-mysql -u "${user}" --password="${pass}" --execute="USE ${DB};DROP TABLE SALIDA_AHP;"
+mysql -u "${user}" --password="${pass}" --execute="USE ${DB};SELECT MODELO.MODELO, CONCAT(ROUND(MAGNITUD * 100,2),' %') AS 'CONVENENCIA' FROM SALIDA_AHP JOIN(MODELO) ON(SALIDA_AHP.MODELO=MODELO.moID) ORDER BY SALIDA_AHP.MODELO;"  | tr '\t' ';' >${temp}"visualResul"
 
 menu_seleccion
 
-paste -d ';' ${temp}"visualResul" ${temp}*_.csv | tr '.' ',' >${temp}informe.csv
+paste -d ';' ${temp}"visualResul" ${temp}*_.csv | tr '.' ',' >${inf}informe_${RANDOM}.csv
 
 
 ################### MANTENIMIENTO ########################################
